@@ -1,4 +1,6 @@
 export class InvalidAccountCodeError extends Error {
+  readonly key = 'INVALID_CODE';
+
   constructor(message = 'El código debe ser numérico y tener una longitud válida (1, 2, 4 o 6 dígitos).') {
     super(message);
     this.name = 'InvalidAccountCodeError';
@@ -6,6 +8,8 @@ export class InvalidAccountCodeError extends Error {
 }
 
 export class InvalidAccountNameError extends Error {
+  readonly key = 'INVALID_NAME';
+
   constructor(message = 'El nombre de la cuenta es obligatorio.') {
     super(message);
     this.name = 'InvalidAccountNameError';
@@ -13,6 +17,8 @@ export class InvalidAccountNameError extends Error {
 }
 
 export class NatureRequiredError extends Error {
+  readonly key = 'NATURE_REQUIRED';
+
   constructor(message = 'Las clases (código de 1 dígito) requieren una naturaleza: debito o credito.') {
     super(message);
     this.name = 'NatureRequiredError';
@@ -20,6 +26,8 @@ export class NatureRequiredError extends Error {
 }
 
 export class DuplicateAccountCodeError extends Error {
+  readonly key = 'DUPLICATE_CODE';
+
   constructor(code: string) {
     super(`Ya existe una cuenta con el código ${code}.`);
     this.name = 'DuplicateAccountCodeError';
@@ -27,6 +35,8 @@ export class DuplicateAccountCodeError extends Error {
 }
 
 export class ParentAccountNotFoundError extends Error {
+  readonly key = 'PARENT_NOT_FOUND';
+
   constructor(parentCode: string) {
     super(`No existe la cuenta padre ${parentCode}. No se puede crear una cuenta huérfana.`);
     this.name = 'ParentAccountNotFoundError';
@@ -34,6 +44,8 @@ export class ParentAccountNotFoundError extends Error {
 }
 
 export class AccountNotFoundError extends Error {
+  readonly key = 'ACCOUNT_NOT_FOUND';
+
   constructor(code: string) {
     super(`No existe una cuenta con el código ${code}.`);
     this.name = 'AccountNotFoundError';
@@ -41,6 +53,8 @@ export class AccountNotFoundError extends Error {
 }
 
 export class AccountHasChildrenError extends Error {
+  readonly key = 'HAS_CHILDREN';
+
   constructor(code: string) {
     super(`La cuenta ${code} tiene cuentas hijas y no puede eliminarse.`);
     this.name = 'AccountHasChildrenError';

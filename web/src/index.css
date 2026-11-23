@@ -2,6 +2,25 @@
   font-family: system-ui, sans-serif;
   line-height: 1.5;
   color-scheme: light dark;
+
+  /* Tokens compartidos para los estilos de los componentes (CSS Modules). */
+  --color-danger: #b3261e;
+  --color-danger-bg: #fdecea;
+  --color-ok: #1b5e20;
+  --color-muted: #5f6368;
+  --color-border: #dadce0;
+  --color-surface: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-danger: #f2b8b5;
+    --color-danger-bg: #3a1c1a;
+    --color-ok: #a5d6a7;
+    --color-muted: #9aa0a6;
+    --color-border: #3c4043;
+    --color-surface: #1e1f22;
+  }
 }
 
 body {

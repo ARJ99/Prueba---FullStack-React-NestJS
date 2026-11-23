@@ -1,0 +1,22 @@
+- main [ref=e3]:
+  - heading "Catálogo de cuentas" [level=1] [ref=e5]
+  - region "Nueva cuenta" [ref=e6]:
+    - heading "Nueva cuenta" [level=2] [ref=e7]
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: Código
+        - textbox "Código" [ref=e11]
+      - generic [ref=e12]:
+        - generic [ref=e13]: Nombre
+        - textbox "Nombre" [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e16]: Naturaleza
+        - combobox "Naturaleza" [disabled] [ref=e17]:
+          - option "Selecciona…" [selected]
+          - option "Débito"
+          - option "Crédito"
+        - paragraph [ref=e18]: Solo las clases (1 dígito) definen naturaleza; los demás niveles la heredan.
+      - button "Crear cuenta" [ref=e20] [cursor=pointer]
+  - region "Árbol del catálogo" [ref=e21]:
+    - heading "Árbol del catálogo" [level=2] [ref=e22]
+    - paragraph [ref=e23]: Cargando catálogo…

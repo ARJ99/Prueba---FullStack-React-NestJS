@@ -1,0 +1,24 @@
+- main [ref=f1e3]:
+  - heading "Catálogo de cuentas" [level=1] [ref=f1e5]
+  - region "Nueva cuenta" [ref=f1e6]:
+    - heading "Nueva cuenta" [level=2] [ref=f1e7]
+    - generic [ref=f1e8]:
+      - generic [ref=f1e9]:
+        - generic [ref=f1e10]: Código
+        - textbox "Código" [invalid] [ref=f1e11]
+        - paragraph [ref=f1e24]: El código es obligatorio.
+      - generic [ref=f1e12]:
+        - generic [ref=f1e13]: Nombre
+        - textbox "Nombre" [invalid] [ref=f1e14]
+        - paragraph [ref=f1e25]: El nombre es obligatorio.
+      - generic [ref=f1e15]:
+        - generic [ref=f1e16]: Naturaleza
+        - combobox "Naturaleza" [disabled] [ref=f1e17]:
+          - option "Selecciona…" [selected]
+          - option "Débito"
+          - option "Crédito"
+        - paragraph [ref=f1e18]: Solo las clases (1 dígito) definen naturaleza; los demás niveles la heredan.
+      - button "Crear cuenta" [active] [ref=f1e20] [cursor=pointer]
+  - region "Árbol del catálogo" [ref=f1e21]:
+    - heading "Árbol del catálogo" [level=2] [ref=f1e22]
+    - paragraph [ref=f1e23]: El catálogo está vacío. Crea la primera clase con el formulario.

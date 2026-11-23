@@ -1,42 +1,75 @@
-import { useEffect, useState } from 'react'
-import { apiUrl } from './api'
+import { AccountTree } from './components/AccountTree'
+import { ConfirmDialog } from './components/ConfirmDialog'
+import { CreateAccountForm } from './components/CreateAccountForm'
+import { useCatalog } from './hooks/useCatalog'
+import { useDeleteFlow } from './hooks/useDeleteFlow'
+import styles from './App.module.css'
 
-type Estado =
-  | { tipo: 'cargando' }
-  | { tipo: 'ok'; mensaje: string }
-  | { tipo: 'error'; mensaje: string }
-
-function App() {
-  const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' })
-
-  useEffect(() => {
-    fetch(apiUrl('/'))
-      .then((respuesta) => {
-        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`)
-        return respuesta.text()
-      })
-      .then((mensaje) => setEstado({ tipo: 'ok', mensaje }))
-      .catch((error: Error) => setEstado({ tipo: 'error', mensaje: error.message }))
-  }, [])
+export default function App() {
+  const catalog = useCatalog()
+  const deleteFlow = useDeleteFlow({ onDelete: catalog.remove })
 
   return (
-    <main>
-      <h1>Arranque de la prueba técnica</h1>
-      <p>
-        Esta pantalla existe solo para comprobar que el frontend le llega a la API.
-        Bórrala y construye lo tuyo.
-      </p>
+    <main className={styles.app}>
+      <header className={styles.header}>
+        <h1>Catálogo de cuentas</h1>
+      </header>
 
-      {estado.tipo === 'cargando' && <p>Consultando la API...</p>}
-      {estado.tipo === 'ok' && <p>La API respondió: {estado.mensaje}</p>}
-      {estado.tipo === 'error' && (
-        <p>
-          No se pudo hablar con la API ({estado.mensaje}). Revisa que esté
-          corriendo en {apiUrl('')}.
-        </p>
+      <section className={styles.card} aria-labelledby="titulo-crear">
+        <h2 id="titulo-crear">Nueva cuenta</h2>
+        <CreateAccountForm onCreate={catalog.create} creating={catalog.creating} />
+      </section>
+
+      <section
+        className={styles.card}
+        aria-labelledby="titulo-arbol"
+        aria-busy={catalog.loading}
+      >
+        <h2 id="titulo-arbol">Árbol del catálogo</h2>
+
+        {catalog.loadError && (
+          <div className={styles.error} role="alert">
+            <p>{catalog.loadError}</p>
+            <button type="button" onClick={catalog.reload}>
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {deleteFlow.deleteError && (
+          <div className={styles.error} role="alert">
+            <p>{deleteFlow.deleteError.message}</p>
+            <button type="button" onClick={deleteFlow.dismissError}>
+              Cerrar
+            </button>
+          </div>
+        )}
+
+        {catalog.loading && <p className={styles.empty}>Cargando catálogo…</p>}
+
+        {!catalog.loading && !catalog.loadError && catalog.tree.length === 0 && (
+          <p className={styles.empty}>
+            El catálogo está vacío. Crea la primera clase con el formulario.
+          </p>
+        )}
+
+        {catalog.tree.length > 0 && (
+          <AccountTree
+            nodes={catalog.tree}
+            onDelete={deleteFlow.requestDelete}
+            deletingCode={catalog.removingCode}
+          />
+        )}
+      </section>
+
+      {deleteFlow.pendingDelete !== null && (
+        <ConfirmDialog
+          code={deleteFlow.pendingDelete}
+          busy={deleteFlow.deletingCode !== null}
+          onConfirm={deleteFlow.confirmDelete}
+          onCancel={deleteFlow.cancelDelete}
+        />
       )}
     </main>
   )
 }
-
-export default App

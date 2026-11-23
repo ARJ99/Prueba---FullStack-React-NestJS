@@ -1,13 +1,11 @@
 import {
   Body,
-  BadRequestException,
-  ConflictException,
   Controller,
   Delete,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
-  NotFoundException,
   Param,
   Post,
 } from '@nestjs/common';
@@ -24,6 +22,13 @@ import {
 import { CreateAccountService } from './create-account.service.js';
 import { TreeService } from './tree.service.js';
 import { DeleteAccountService } from './delete-account.service.js';
+
+/** Cuerpo de error de la API: `key` es estable y la UI lo usa para ubicar el error. */
+interface ApiErrorBody {
+  statusCode: number;
+  key: string;
+  message: string;
+}
 
 @Controller('accounts')
 export class AccountsController {
@@ -58,24 +63,45 @@ export class AccountsController {
   }
 
   /**
-   * Traduce los errores del dominio a códigos HTTP:
+   * Traduce los errores del dominio a códigos HTTP y una `key` estable:
    * datos inválidos → 400, estado del catálogo en conflicto → 409,
    * código inexistente → 404.
    */
   private mapDomainError(error: unknown): never {
-    if (
-      error instanceof InvalidAccountCodeError ||
-      error instanceof InvalidAccountNameError ||
-      error instanceof NatureRequiredError
-    ) {
-      throw new BadRequestException(error.message);
+    const mapped = this.statusAndKeyOf(error);
+    if (mapped === null) {
+      throw error;
     }
-    if (error instanceof DuplicateAccountCodeError || error instanceof AccountHasChildrenError) {
-      throw new ConflictException(error.message);
+    const body: ApiErrorBody = {
+      statusCode: mapped.status,
+      key: mapped.key,
+      message: (error as Error).message,
+    };
+    throw new HttpException(body, mapped.status);
+  }
+
+  private statusAndKeyOf(error: unknown): { status: number; key: string } | null {
+    if (error instanceof InvalidAccountCodeError) {
+      return { status: HttpStatus.BAD_REQUEST, key: 'INVALID_CODE' };
     }
-    if (error instanceof ParentAccountNotFoundError || error instanceof AccountNotFoundError) {
-      throw new NotFoundException(error.message);
+    if (error instanceof InvalidAccountNameError) {
+      return { status: HttpStatus.BAD_REQUEST, key: 'INVALID_NAME' };
     }
-    throw error;
+    if (error instanceof NatureRequiredError) {
+      return { status: HttpStatus.BAD_REQUEST, key: 'NATURE_REQUIRED' };
+    }
+    if (error instanceof DuplicateAccountCodeError) {
+      return { status: HttpStatus.CONFLICT, key: 'DUPLICATE_CODE' };
+    }
+    if (error instanceof AccountHasChildrenError) {
+      return { status: HttpStatus.CONFLICT, key: 'HAS_CHILDREN' };
+    }
+    if (error instanceof ParentAccountNotFoundError) {
+      return { status: HttpStatus.NOT_FOUND, key: 'PARENT_NOT_FOUND' };
+    }
+    if (error instanceof AccountNotFoundError) {
+      return { status: HttpStatus.NOT_FOUND, key: 'ACCOUNT_NOT_FOUND' };
+    }
+    return null;
   }
 }

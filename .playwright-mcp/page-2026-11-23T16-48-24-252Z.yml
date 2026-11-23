@@ -1,0 +1,54 @@
+- main [ref=f1e3]:
+  - heading "Catálogo de cuentas" [level=1] [ref=f1e5]
+  - region "Nueva cuenta" [ref=f1e6]:
+    - heading "Nueva cuenta" [level=2] [ref=f1e7]
+    - generic [ref=f1e8]:
+      - generic [ref=f1e9]:
+        - generic [ref=f1e10]: Código
+        - textbox "Código" [ref=f1e11]
+      - generic [ref=f1e12]:
+        - generic [ref=f1e13]: Nombre
+        - textbox "Nombre" [ref=f1e14]
+      - generic [ref=f1e15]:
+        - generic [ref=f1e16]: Naturaleza
+        - combobox "Naturaleza" [disabled] [ref=f1e17]:
+          - option "Selecciona…" [selected]
+          - option "Débito"
+          - option "Crédito"
+        - paragraph [ref=f1e26]: Solo las clases (1 dígito) definen naturaleza; los demás niveles la heredan.
+      - status [ref=f1e56]: Cuenta creada.
+      - button "Crear cuenta" [ref=f1e20] [cursor=pointer]
+  - region "Árbol del catálogo" [ref=f1e21]:
+    - heading "Árbol del catálogo" [level=2] [ref=f1e22]
+    - list [ref=f1e28]:
+      - listitem [ref=f1e29]:
+        - generic [ref=f1e30]:
+          - button "Contraer 1" [expanded] [ref=f1e37] [cursor=pointer]: ▾
+          - generic [ref=f1e32]: "1"
+          - generic [ref=f1e33]: Activo
+          - generic [ref=f1e34]: débito
+          - button "Eliminar cuenta 1" [ref=f1e35] [cursor=pointer]: Eliminar
+        - list [ref=f1e38]:
+          - listitem [ref=f1e39]:
+            - generic [ref=f1e40]:
+              - button "Contraer 11" [expanded] [ref=f1e47] [cursor=pointer]: ▾
+              - generic [ref=f1e42]: "11"
+              - generic [ref=f1e43]: Disponible
+              - generic [ref=f1e44]: débito
+              - button "Eliminar cuenta 11" [ref=f1e45] [cursor=pointer]: Eliminar
+            - list [ref=f1e48]:
+              - listitem [ref=f1e49]:
+                - generic [ref=f1e50]:
+                  - button "Contraer 1105" [expanded] [ref=f1e57] [cursor=pointer]: ▾
+                  - generic [ref=f1e52]: "1105"
+                  - generic [ref=f1e53]: Caja
+                  - generic [ref=f1e54]: débito
+                  - button "Eliminar cuenta 1105" [ref=f1e55] [cursor=pointer]: Eliminar
+                - list [ref=f1e58]:
+                  - listitem [ref=f1e59]:
+                    - generic [ref=f1e60]:
+                      - generic [aria-hidden] [ref=f1e61]: •
+                      - generic [ref=f1e62]: "110505"
+                      - generic [ref=f1e63]: Caja general
+                      - generic [ref=f1e64]: débito
+                      - button "Eliminar cuenta 110505" [ref=f1e65] [cursor=pointer]: Eliminar
