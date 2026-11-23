@@ -1,69 +1,37 @@
-# API — Catálogo de cuentas (NestJS)
+# API — Catálogo de cuentas contables
 
-Backend de la prueba técnica full-stack: un **catálogo jerárquico de cuentas contables** con alta, consulta en árbol y baja, construido con NestJS 12 y TypeScript (ESM).
+Servicio REST para gestionar un **catálogo jerárquico de cuentas contables**: alta de cuentas, consulta del catálogo como árbol y baja de cuentas hoja.
 
-Este README cubre el paquete `api/` y también el proyecto completo, para que cualquier desarrollador pueda levantarlo, entenderlo y extenderlo.
+- **Stack:** NestJS 12 + TypeScript (ESM, `module: nodenext`)
+- **Puerto:** `3000` (configurable con `PORT`)
+- **Pruebas:** Vitest (unitarias + e2e con supertest)
+- **Estado:** sin base de datos — persistencia en memoria (ver [Decisiones de diseño](#decisiones-de-diseño))
 
 ---
-
-## El proyecto completo
-
-El repositorio es un monorepo de dos paquetes npm independientes, orquestados por scripts de la raíz con `--prefix` (no hay workspaces ni tooling de monorepo):
-
-| Carpeta | Qué hay | Puerto |
-|---------|---------|:------:|
-| `api/` | API NestJS 12 con el catálogo de cuentas | 3000 |
-| `web/` | Front React 19 + Vite: alta de cuentas, árbol expandible y borrado con confirmación | 5173 |
-
-**Cómo se conectan:** el front llama a la API directamente por URL absoluta (sin proxy de Vite); CORS es el mecanismo que los une.
-
-- El front lee la URL base de la variable `VITE_API_URL` (default `http://localhost:3000`); el ejemplo está en `web/.env.example`.
-- La API acepta peticiones del origen en `WEB_ORIGIN` (default `http://localhost:5173`).
-- Si cambias el puerto del front, cambia `WEB_ORIGIN`, y viceversa.
-
-**Qué hace la aplicación:** un catálogo jerárquico de cuentas contables. El front muestra el árbol del catálogo (nodos expandibles con código, nombre y naturaleza), un formulario para dar de alta cuentas y un borrado de hojas con diálogo de confirmación. Toda operación se refleja en el árbol, que se recarga tras cada alta o baja.
-
-Ambos paquetes comparten el mismo contrato de dominio (`Account`, `AccountTreeNode`, `ErrorKey`): la API lo define en `src/accounts/`, el front lo refleja en `web/src/types.ts` y lo consume a través de `web/src/api.ts` (un wrapper de `fetch` que traduce las respuestas de error a `ApiError`).
-
-### Estructura del front (`web/src/`)
-
-```
-api.ts                       # wrapper de fetch + apiUrl(); mapea errores a ApiError
-types.ts                     # contrato de dominio (espejo de los tipos de la API)
-App.tsx                      # pantalla única: form + árbol + diálogo de borrado
-components/
-├── CreateAccountForm.tsx    # alta de cuentas con validación por campo
-├── AccountTree.tsx          # árbol expandible/colapsable con badge de naturaleza
-└── ConfirmDialog.tsx        # confirmación antes de eliminar
-hooks/
-├── useCatalog.ts            # estado del catálogo: carga, recarga, alta, baja
-└── useDeleteFlow.ts         # flujo de borrado: confirmación → eliminación → error
-```
 
 ## Requisitos
 
 - **Node 22** (ver `.nvmrc`; con `nvm use` queda listo).
 - **npm 10 o superior** — con npm 9.2 la instalación falla.
 
-## Cómo correrlo
+## Instalación y ejecución
 
-Desde la raíz del repositorio:
-
-```bash
-npm install      # instala la raíz y, vía postinstall, api/ y web/
-npm run dev      # API (watch) y front juntos
-```
-
-Abre http://localhost:5173. Verás el catálogo: el formulario "Nueva cuenta" arriba y el árbol del catálogo abajo. Si el árbol muestra cuentas, el front está hablando con la API.
-
-Solo el backend (desde `api/`):
+Desde esta carpeta (`api/`):
 
 ```bash
 npm install
-npm run start:dev    # servidor en modo watch, puerto 3000
+npm run start:dev    # servidor en modo watch en el puerto 3000
 ```
 
-## Comandos (desde `api/`)
+> El repositorio es un monorepo de dos paquetes npm independientes orquestado por scripts de la raíz con `--prefix` (sin workspaces). Desde la raíz, `npm install` instala ambos paquetes (vía `postinstall`) y `npm run dev` levanta esta API junto al resto de la aplicación.
+
+Una vez levantada, la API expone `http://localhost:3000/accounts`. Para verificar que responde:
+
+```bash
+curl http://localhost:3000/accounts/tree   # devuelve [] con el catálogo vacío
+```
+
+## Comandos
 
 | Comando | Qué hace |
 |---------|----------|
@@ -73,7 +41,7 @@ npm run start:dev    # servidor en modo watch, puerto 3000
 | `npm run lint` | oxlint con reglas type-aware sobre `src/` y `test/` |
 | `npm run format` | Prettier (comillas simples, trailing commas) |
 | `npm test` | Pruebas unitarias (Vitest): `**/*.spec.ts` |
-| `npm run test:e2e` | Pruebas e2e: `**/*.e2e-spec.ts` (supertest) |
+| `npm run test:e2e` | Pruebas e2e: `test/*.e2e-spec.ts` (supertest) |
 | `npm run test:cov` | Cobertura |
 | `npm run test:watch` / `test:debug` | Vitest en watch / con inspector |
 
@@ -100,13 +68,12 @@ Reglas de negocio:
 4. **Borrado solo de hojas**: eliminar una cuenta con hijas se rechaza. La verificación ocurre **antes** de borrar, nunca después.
 5. **Validaciones de entrada**: el código debe ser numérico puro con longitud de nivel válida; el nombre es obligatorio (se recortan los espacios de los extremos).
 
-## Arquitectura de `api/`
+## Arquitectura
 
 ```
 src/
 ├── main.ts                     # bootstrap: CORS (WEB_ORIGIN) y puerto (PORT)
 ├── app.module.ts               # módulo raíz: importa AccountsModule
-├── app.controller.ts           # endpoint raíz (Hello World de conexión)
 └── accounts/                   # módulo del catálogo
     ├── account.ts              # modelo + helpers puros (levelOf, parentCodeOf)
     ├── accounts.controller.ts  # rutas REST + mapeo de errores del dominio
@@ -117,15 +84,14 @@ src/
     ├── accounts.errors.ts      # errores de dominio con `key` estable
     └── *.spec.ts               # pruebas unitarias de cada servicio
 test/
-├── accounts.e2e-spec.ts        # e2e del catálogo vía supertest
-└── app.e2e-spec.ts
+└── accounts.e2e-spec.ts        # e2e del catálogo vía supertest
 ```
 
 La separación es **controlador → casos de uso (servicios) → repositorio**:
 
-- El controlador no conoce reglas de negocio: valida nada, solo traduce errores del dominio a respuestas HTTP.
+- El controlador no conoce reglas de negocio: no valida nada, solo traduce errores del dominio a respuestas HTTP.
 - Los servicios concentran las reglas y son puros respecto de la infraestructura: dependen del repositorio concreto inyectado, cuya interfaz mínima (`findByCode` / `findAll` / `save` / `delete`) deja la puerta abierta a reemplazarlo por una base de datos real sin tocar los casos de uso.
-- Los errores de dominio (`accounts.errors.ts`) cargan una `key` estable (`INVALID_CODE`, `HAS_CHILDREN`, …) que el controlador expone en el cuerpo de error y que la UI usa para ubicar cada error junto al campo que corresponde.
+- Los errores de dominio (`accounts.errors.ts`) cargan una `key` estable (`INVALID_CODE`, `HAS_CHILDREN`, …) que el controlador expone en el cuerpo de error para que cualquier cliente la consuma.
 - La persistencia es **en memoria** (`Map`): decisión deliberada del alcance mínimo; los datos se pierden al reiniciar el proceso.
 
 ### Convenciones TypeScript
@@ -140,10 +106,6 @@ La separación es **controlador → casos de uso (servicios) → repositorio**:
 ## API REST
 
 Base: `http://localhost:3000`
-
-### `GET /` — verificación de conexión
-
-Devuelve `Hello World!`. Es el ping que usa la pantalla del front.
 
 ### `POST /accounts` — crear cuenta
 
@@ -182,7 +144,7 @@ Raíces = clases; hermanos ordenados por código (lexicográfico coincide con el
 
 ### Cuerpo de error
 
-Toda respuesta de error comparte la misma forma; `key` es estable y la UI la usa para ubicar el error:
+Toda respuesta de error comparte la misma forma; `key` es estable y los clientes la usan para ubicar el error:
 
 ```jsonc
 {
@@ -202,27 +164,6 @@ Toda respuesta de error comparte la misma forma; `key` es estable y la UI la usa
 | `ACCOUNT_NOT_FOUND` | 404 | El código a eliminar no existe |
 | `HAS_CHILDREN` | 409 | La cuenta a eliminar tiene hijas |
 
-## El front (`web/`)
-
-React 19 + Vite, sin librerías de estado ni de componentes: el estado del catálogo vive en hooks propios.
-
-**Pantalla única** (`App.tsx`) con tres piezas:
-
-- **`CreateAccountForm`** — alta de cuentas. Valida en el cliente antes de enviar (código numérico de 1/2/4/6 dígitos, nombre obligatorio, naturaleza requerida solo para clases) y muestra el error junto a cada campo. Si la API rechaza, usa la `key` del cuerpo de error para ubicar el mensaje en el campo que corresponde (`INVALID_CODE`/`DUPLICATE_CODE`/`PARENT_NOT_FOUND` → código, `INVALID_NAME` → nombre, `NATURE_REQUIRED` → naturaleza). El campo naturaleza se deshabilita salvo para clases, con una nota que explica la herencia. Tras crear, limpia el formulario y muestra una nota de éxito que desaparece a los 4 segundos.
-- **`AccountTree`** — árbol expandible/colapsable. Cada fila muestra código, nombre y un badge de naturaleza (débito/crédito); los nodos con hijas tienen botón de expansión accesible (`aria-expanded`, `aria-controls`). Todo expandido por defecto, y el estado de expansión **sobrevive a las recargas** del árbol: vive en el componente raíz, no en los nodos. Mientras se elimina una cuenta, su botón muestra "Eliminando…" y queda deshabilitado.
-- **`ConfirmDialog`** — confirmación antes de eliminar. Mientras la eliminación está en curso el diálogo se queda abierto (botones bloqueados) y se cierra al resolver, con éxito o con error.
-
-**Estado del catálogo** (`useCatalog`): árbol, carga inicial, recarga, alta y baja. Detalles a conocer para extenderlo:
-
-- La carga es **idempotente**: cada petición lleva un número de turno y solo la última actualiza el estado, así que el doble montaje de `StrictMode` no causa condiciones de carrera.
-- Si una recarga falla **con datos previos**, el árbol anterior sigue visible junto al mensaje de error y su botón "Reintentar"; no se vuelve al estado de carga.
-- Crear o eliminar recarga el árbol al éxito; si la recarga falla, el error aparece en `loadError`, no en la operación.
-- Las operaciones exponen su progreso (`creating`, `removingCode`) para deshabilitar botones y evitar envíos duplicados.
-
-**Flujo de borrado** (`useDeleteFlow`): separa pedir confirmación (`requestDelete`) de ejecutarla (`confirmDelete`), expone el error del último intento (p. ej. `HAS_CHILDREN`) para mostrarlo junto al árbol, y lo limpia al reintentar o descartarlo.
-
-Los errores de red o de cuerpo no-JSON (p. ej. proxy caído) caen a `ApiError` con `key: 'UNKNOWN'` y un mensaje genérico, así que ninguna ruta deja de manejarse.
-
 ## Configuración
 
 Variables leídas con `process.env` (no hay módulo de configuración):
@@ -230,10 +171,11 @@ Variables leídas con `process.env` (no hay módulo de configuración):
 | Variable | Default | Qué controla |
 |----------|---------|--------------|
 | `PORT` | `3000` | Puerto de escucha de la API |
-| `WEB_ORIGIN` | `http://localhost:5173` | Origen del front aceptado por CORS |
+| `WEB_ORIGIN` | `http://localhost:5173` | Origen HTTP aceptado por CORS |
+
+> `WEB_ORIGIN` debe coincidir con el origen desde el que se consume la API; de lo contrario, el navegador bloqueará las peticiones por CORS. Las peticiones sin navegador (curl, Postman) no se ven afectadas.
 
 ## Decisiones y límite del alcance
 
 - **Persistencia en memoria**: intencional para el alcance mínimo; la interfaz del repositorio está pensada para swap a base de datos sin cambios en los servicios.
-- **Contrato compartido a mano**: `web/src/types.ts` duplica los tipos de `api/src/accounts/account.ts` a propósito (paquetes independientes, sin tooling compartido); si cambias el dominio, actualiza ambos.
 - **Sin librería de validación** (class-validator, zod): las validaciones viven en los servicios, donde también están las reglas de negocio, y tienen cobertura de pruebas unitarias.
